@@ -37,15 +37,15 @@ void q_free(queue_t *q)
 {
     /* How about freeing the list elements and the strings? */
     /* Free queue structure */
-    if (q != NULL && q->q_size != 0) {
+    if (q != NULL) {
         list_ele_t *temp = q->head;
         while (temp != NULL) {
             list_ele_t *next = temp->next;
             free(temp);
             temp = next;
         }
+        free(q);
     }
-    free(q);
 }
 
 /*
@@ -117,13 +117,29 @@ bool q_insert_tail(queue_t *q, char *s)
   Return true if successful.
   Return false if queue is NULL or empty.
   If sp is non-NULL and an element is removed, copy the removed string to *sp
-  (up to a maximum of bufsize-1 characters, plus a null terminator.)
+  (up to a maximum of bufsize-1 characters, plus a null termiowonator.)
   The space used by the list element and the string should be freed.
 */
 bool q_remove_head(queue_t *q, char *sp, size_t bufsize)
 {
     /* You need to fix up this code. */
-    q->head = q->head->next;
+    if (q == NULL || q->q_size == 0 || sp == NULL)
+        return false;
+
+    list_ele_t *temp = q->head;
+    int str_size =
+        strlen(temp->value) >= (bufsize) ? bufsize - 1 : strlen(temp->value);
+    strncpy(sp, temp->value, str_size);
+    sp[str_size] = '\0';
+
+    if (q->q_size == 1) {  // only one element
+        q->head = NULL;
+        q->tail = NULL;
+    } else {
+        q->head = temp->next;
+    }
+    q->q_size--;
+    free(temp);
     return true;
 }
 
@@ -147,5 +163,19 @@ int q_size(queue_t *q)
  */
 void q_reverse(queue_t *q)
 {
-    /* You need to write the code for this function */
+    if (q == NULL || q->q_size <= 1)
+        return;
+
+    list_ele_t *prev = NULL;
+    list_ele_t *current = q->head;
+    list_ele_t *next = NULL;
+
+    while (current != NULL) {
+        next = current->next;
+        current->next = prev;
+        prev = current;
+        current = next;
+    }
+    q->tail = q->head;
+    q->head = prev;
 }
