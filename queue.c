@@ -11,10 +11,9 @@
  * It uses a singly-linked list to represent the set of queue elements
  */
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-
 #include "harness.h"
 #include "queue.h"
 
@@ -25,8 +24,11 @@
 queue_t *q_new()
 {
     queue_t *q = malloc(sizeof(queue_t));
-    /* What if malloc returned NULL? */
+    if (q == NULL)
+        return NULL;
     q->head = NULL;
+    q->tail = NULL;
+    q->q_size = 0;
     return q;
 }
 
@@ -35,6 +37,14 @@ void q_free(queue_t *q)
 {
     /* How about freeing the list elements and the strings? */
     /* Free queue structure */
+    if (q != NULL && q->q_size != 0) {
+        list_ele_t *temp = q->head;
+        while (temp != NULL) {
+            list_ele_t *next = temp->next;
+            free(temp);
+            temp = next;
+        }
+    }
     free(q);
 }
 
@@ -47,13 +57,23 @@ void q_free(queue_t *q)
  */
 bool q_insert_head(queue_t *q, char *s)
 {
-    list_ele_t *newh;
     /* What should you do if the q is NULL? */
-    newh = malloc(sizeof(list_ele_t));
-    /* Don't forget to allocate space for the string and copy it */
-    /* What if either call to malloc returns NULL? */
+    if (q == NULL || s == NULL)
+        return false;
+    list_ele_t *newh;
+    if (!(newh = malloc(sizeof(list_ele_t))))
+        return false;
+    newh->value = strdup(s);
+    if (!newh->value) {
+        free(newh);
+        return false;
+    }
     newh->next = q->head;
     q->head = newh;
+    if (q->q_size == 0) {
+        q->tail = newh;
+    }
+    q->q_size++;
     return true;
 }
 
@@ -95,7 +115,7 @@ int q_size(queue_t *q)
 {
     /* You need to write the code for this function */
     /* Remember: It should operate in O(1) time */
-    return 0;
+    return q != NULL ? q->q_size : 0;
 }
 
 /*
